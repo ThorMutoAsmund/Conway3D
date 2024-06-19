@@ -14,9 +14,12 @@ public class World : MonoBehaviour
     public int neighborMin2D = 2;
     public int neighborMax2D = 4;
     public int neighborSpawn2D = 3;
+    public int neighborSpawnMax2D = 4;
 
-    public int NeighborMin2D => this.neighborMin2D;
-    public int NeighborMax2D => this.neighborMax2D;
+    public int NeighborMin => this.neighborMin2D;
+    public int NeighborMax => this.neighborMax2D;
+    public int NeighborSpawnMin => this.neighborSpawn2D;
+    public int NeighborSpawnMax => this.neighborSpawnMax2D;
     public bool IsRunning { get; private set; }
     public bool AllowSenescentCells { get; private set; } = false;
 
@@ -38,11 +41,11 @@ public class World : MonoBehaviour
                 foreach (var candidateLocation in new List<Vector3Int>(this.candidateLocations))
                 {
                     var cellsAround = CountAliveCellsAround(candidateLocation);
-                    if (cellsAround == this.neighborSpawn2D)
+                    if (cellsAround >= this.NeighborSpawnMin && cellsAround < this.NeighborSpawnMax)
                     {
                         spawnList.Add(candidateLocation);
                     }
-                    else if (cellsAround < this.neighborSpawn2D)
+                    else if (cellsAround < this.NeighborSpawnMin)
                     {
                         this.candidateLocations.Remove(candidateLocation);
                     }
@@ -50,6 +53,43 @@ public class World : MonoBehaviour
                 foreach (var spawnLocation in spawnList)
                 {
                     Spawn2D(spawnLocation, true);
+                }
+
+                // Kill
+                if (this.deathRow.Count > 0)
+                {
+                    foreach (var cellLocation in this.deathRow)
+                    {
+                        Kill(cellLocation);
+                    }
+                    this.deathRow.Clear();
+                }
+
+                if (this.stopAfterNextUpdate)
+                {
+                    this.stopAfterNextUpdate = false;
+                    Stop();
+                }
+            }
+            else
+            {
+                var spawnList = new List<Vector3Int>();
+
+                foreach (var candidateLocation in new List<Vector3Int>(this.candidateLocations))
+                {
+                    var cellsAround = CountAliveCellsAround(candidateLocation);
+                    if (cellsAround >= this.NeighborSpawnMin && cellsAround < this.NeighborSpawnMax)
+                    {
+                        spawnList.Add(candidateLocation);
+                    }
+                    else if (cellsAround < this.NeighborSpawnMin)
+                    {
+                        this.candidateLocations.Remove(candidateLocation);
+                    }
+                }
+                foreach (var spawnLocation in spawnList)
+                {
+                    Spawn3D(spawnLocation, true);
                 }
 
                 // Kill
@@ -101,7 +141,7 @@ public class World : MonoBehaviour
 
     public int CountAliveCellsAround(Vector3Int location)
     {
-        return location.Surrounding2D().Count(l => HasAliveCellAt(l));
+        return (this.is2D ? location.Surrounding2D() : location.Surrounding3D()).Count(l => HasAliveCellAt(l));
     }
     
 

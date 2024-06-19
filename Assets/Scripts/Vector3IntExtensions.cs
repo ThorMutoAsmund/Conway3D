@@ -25,7 +25,7 @@ public static class Vector3IntExtensions
     public static Vector3Int[] Surrounding3D(this Vector3Int location)
     {
         var result = new List<Vector3Int>();
-        for (int x = -1; x <=1; ++x)
+        for (int x = -1; x <= 1; ++x)
         {
             for (int y = -1; y <= 1; ++y)
             {

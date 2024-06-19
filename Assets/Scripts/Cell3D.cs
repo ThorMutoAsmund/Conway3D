@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class Cell3D : MonoBehaviour, ICell
@@ -22,6 +20,14 @@ public class Cell3D : MonoBehaviour, ICell
     {
         if (this.world.IsRunning && this.IsAlive)
         {
+            var neighbors = this.world.CountAliveCells(this.Location.Surrounding3D());
+            // Any alive cell that is touching less than two alive neighbours dies.
+            // Any alive cell touching four or more alive neighbours dies.
+            if (neighbors < this.world.NeighborMin || neighbors >= this.world.NeighborMax)
+            {
+                Die();
+            }
+            // Any alive cell touching two or three alive neighbours does nothing.
         }
     }
 

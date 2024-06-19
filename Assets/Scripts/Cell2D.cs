@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class Cell2D : MonoBehaviour, ICell
@@ -27,7 +25,7 @@ public class Cell2D : MonoBehaviour, ICell
             var neighbors = this.world.CountAliveCells(this.Location.Surrounding2D());
             // Any alive cell that is touching less than two alive neighbours dies.
             // Any alive cell touching four or more alive neighbours dies.
-            if (neighbors < this.world.NeighborMin2D || neighbors >= this.world.NeighborMax2D)
+            if (neighbors < this.world.NeighborMin || neighbors >= this.world.NeighborMax)
             {
                 Die();
             }
