@@ -22,4 +22,23 @@ public static class Vector3IntExtensions
         return new Vector3Int[] { location.Add(x: -1), location.Add(x: 1), location.Add(y: -1), location.Add(y: 1),
             location.Add(x: -1, y: -1), location.Add(x: 1, y:1), location.Add(x: 1, y: -1), location.Add(x: -1, y: 1) };
     }
+    public static Vector3Int[] Surrounding3D(this Vector3Int location)
+    {
+        var result = new List<Vector3Int>();
+        for (int x = -1; x <=1; ++x)
+        {
+            for (int y = -1; y <= 1; ++y)
+            {
+                for (int z = -1; z <= 1; ++z)
+                {
+                    if (x !=0 || y != 0 || z != 0)
+                    {
+                        result.Add(location.Add(x: x, y: y, z: z));
+                    }
+                }
+            }
+        }
+
+        return result.ToArray();
+    }
 }

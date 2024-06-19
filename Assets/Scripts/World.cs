@@ -1,77 +1,85 @@
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
+// https://simple.wikipedia.org/wiki/Conway%27s_Game_of_Life
+
 public class World : MonoBehaviour
 {
-    public GameObject cellPrefab;
+    public bool is2D = true;
+    public GameObject cellPrefab2D;
+    public GameObject cellPrefab3D;
     public int cellCount = 0;
     public int candidateCount = 0;
+    public int neighborMin2D = 2;
+    public int neighborMax2D = 4;
+    public int neighborSpawn2D = 3;
 
+    public int NeighborMin2D => this.neighborMin2D;
+    public int NeighborMax2D => this.neighborMax2D;
     public bool IsRunning { get; private set; }
     public bool AllowSenescentCells { get; private set; } = false;
 
     private int span = 10;
     private bool stopAfterNextUpdate;
-    private Dictionary<Vector3Int, Cell> cells = new();
+    private Dictionary<Vector3Int, ICell> cells = new();
     private List<Vector3Int> candidateLocations = new();
-    private List<Cell> deathRow = new ();
+    private List<Vector3Int> deathRow = new ();
 
     private void LateUpdate()
     {
         if (this.IsRunning)
         {
-            // Reporting
-            this.candidateCount = this.candidateLocations.Count;
-            this.cellCount = this.cells.Count;
-
-            // Any dead cell touching exactly three alive neighbours becomes alive.
-            var spawnList = new List<Vector3Int>();
-
-            foreach (var candidateLocation in new List<Vector3Int>(this.candidateLocations))
+            if (this.is2D)
             {
-                var cellsAround = CountAliveCellsAround(candidateLocation);
-                if (cellsAround == 3)
+                // Any dead cell touching exactly three alive neighbours becomes alive.
+                var spawnList = new List<Vector3Int>();
+
+                foreach (var candidateLocation in new List<Vector3Int>(this.candidateLocations))
                 {
-                    spawnList.Add(candidateLocation);
+                    var cellsAround = CountAliveCellsAround(candidateLocation);
+                    if (cellsAround == this.neighborSpawn2D)
+                    {
+                        spawnList.Add(candidateLocation);
+                    }
+                    else if (cellsAround < this.neighborSpawn2D)
+                    {
+                        this.candidateLocations.Remove(candidateLocation);
+                    }
                 }
-                else if (cellsAround < 3)
+                foreach (var spawnLocation in spawnList)
                 {
-                    this.candidateLocations.Remove(candidateLocation);
+                    Spawn2D(spawnLocation, true);
                 }
-            }
-            foreach (var spawnLocation in spawnList)
-            {
-                Spawn(spawnLocation, true);
-            }
 
-
-            // Kill
-            if (this.deathRow.Count > 0)
-            {
-                foreach (var cell in this.deathRow)
+                // Kill
+                if (this.deathRow.Count > 0)
                 {
-                    Kill(cell);
+                    foreach (var cellLocation in this.deathRow)
+                    {
+                        Kill(cellLocation);
+                    }
+                    this.deathRow.Clear();
                 }
-                this.deathRow.Clear();
+
+                if (this.stopAfterNextUpdate)
+                {
+                    this.stopAfterNextUpdate = false;
+                    Stop();
+                }
             }
 
-            if (this.stopAfterNextUpdate)
-            {
-                this.stopAfterNextUpdate = false;
-                Stop();
-            }
+            Report();
         }
     }
 
     public void ClearAll()
     {
-        Debug.Log($"Clearing {this.name}");
+        Debug.Log($"Clearing all in world");
 
-        foreach (var cell in new List<Cell>(this.cells.Values))
+        foreach (var cellLocation in new List<Vector3Int>(this.cells.Keys))
         {
-            Kill(cell);
+            Kill(cellLocation);
         }
         this.candidateLocations.Clear();
     }
@@ -108,15 +116,28 @@ public class World : MonoBehaviour
         Debug.Log($"Spawning {maxAmount} cells");
         for (int i = 0; i < maxAmount; ++i)
         {
-            var location = new Vector3Int(Random.Range(-this.span, this.span + 1), Random.Range(-this.span, this.span + 1), Random.Range(-this.span, this.span + 1));
-            if (!HasCellAt(location))
+            if (this.is2D)
             {
-                Spawn(location);
+                var location = new Vector3Int(Random.Range(-this.span, this.span + 1), Random.Range(-this.span, this.span + 1), 0);
+                if (!HasCellAt(location))
+                {
+                    Spawn2D(location, true);
+                }
+            }
+            else
+            {
+                var location = new Vector3Int(Random.Range(-this.span, this.span + 1), Random.Range(-this.span, this.span + 1), Random.Range(-this.span, this.span + 1));
+                if (!HasCellAt(location))
+                {
+                    Spawn3D(location);
+                }
             }
         }
+
+        Report();
     }
 
-    public void SpawnRandom2D(int maxAmount)
+    public void SpawnGlider()
     {
         if (!Application.isPlaying)
         {
@@ -124,38 +145,23 @@ public class World : MonoBehaviour
             return;
         }
 
-        Debug.Log($"Spawning {maxAmount} cells");
-        for (int i = 0; i < maxAmount; ++i)
+        if (this.is2D)
         {
-            var location = new Vector3Int(Random.Range(-this.span, this.span + 1), Random.Range(-this.span, this.span + 1), 0);
-            if (!HasCellAt(location))
-            {
-                Spawn(location, true);
-            }
+            Debug.Log($"Spawning glider");
+
+            Spawn2D(new Vector3Int(-1, -1, 0), true);
+            Spawn2D(new Vector3Int(0, -1, 0), true);
+            Spawn2D(new Vector3Int(1, -1, 0), true);
+            Spawn2D(new Vector3Int(1, 0, 0), true);
+            Spawn2D(new Vector3Int(0, 1, 0), true);
+
+            Report();
         }
     }
 
-    public void SpawnGlider2D()
+    private void Spawn2D(Vector3Int location, bool is2D = false)
     {
-        if (!Application.isPlaying)
-        {
-            Debug.LogWarning("Application must be running");
-            return;
-        }
-
-        Debug.Log($"Spawning glider");
-
-        Spawn(new Vector3Int(-1, -1, 0), true);
-        Spawn(new Vector3Int(0, -1, 0), true);
-        Spawn(new Vector3Int(1, -1, 0), true);
-        Spawn(new Vector3Int(1, 0, 0), true);
-        Spawn(new Vector3Int(0, 1, 0), true);
-    }
-
-    private void Spawn(Vector3Int location, bool is2D = false)
-    {
-        var cell = Instantiate(this.cellPrefab, location, Quaternion.identity, this.transform).GetComponent<Cell>();
-        cell.is2D = is2D;
+        var cell = Instantiate(this.cellPrefab2D, location, Quaternion.identity, this.transform).GetComponent<Cell2D>();
         this.cells[location] = cell;
 
         if (this.candidateLocations.Contains(location))
@@ -163,45 +169,68 @@ public class World : MonoBehaviour
             this.candidateLocations.Remove(location);
         }
 
-        if (is2D)
+        foreach (var candidateLocation in location.Surrounding2D())
         {
-            foreach (var candidateLocation in location.Surrounding2D())
+            if (!this.candidateLocations.Contains(candidateLocation) && (!this.cells.ContainsKey(candidateLocation) || this.deathRow.Contains(candidateLocation)))
             {
-                if (!this.candidateLocations.Contains(candidateLocation) && !this.cells.ContainsKey(candidateLocation))
-                {
-                    this.candidateLocations.Add(candidateLocation);
-                }
+                this.candidateLocations.Add(candidateLocation);
             }
         }
     }
 
-    public void ScheduleKill(Cell cell)
+    private void Spawn3D(Vector3Int location, bool is2D = false)
     {
-        this.deathRow.Add(cell);
+        var cell = Instantiate(this.cellPrefab3D, location, Quaternion.identity, this.transform).GetComponent<Cell3D>();
+        this.cells[location] = cell;
+
+        if (this.candidateLocations.Contains(location))
+        {
+            this.candidateLocations.Remove(location);
+        }
+
+        foreach (var candidateLocation in location.Surrounding3D())
+        {
+            if (!this.candidateLocations.Contains(candidateLocation) && (!this.cells.ContainsKey(candidateLocation) || this.deathRow.Contains(candidateLocation)))
+            {
+                this.candidateLocations.Add(candidateLocation);
+            }
+        }
     }
 
-    private void Kill(Cell cell)
+    public void ScheduleKill(ICell cell)
     {
-        this.cells.Remove(cell.Location);
+        this.deathRow.Add(cell.Location);
+    }
 
+    private void Kill(Vector3Int cellLocation)
+    {
+        var cell = this.cells[cellLocation];
+        this.cells.Remove(cellLocation);
         GameObject.Destroy(cell.gameObject);
+    }
+
+    private void Report()
+    {
+        // Reporting
+        this.candidateCount = this.candidateLocations.Count;
+        this.cellCount = this.cells.Count;
     }
 
     public void Run()
     {
-        Debug.Log($"Starting world {this.name}");
+        Debug.Log("Starting world");
         this.IsRunning = true;
     }
 
     public void Stop()
     {
-        Debug.Log($"Stopping world {this.name}");
+        Debug.Log("Stopping world");
         this.IsRunning = false;
     }
 
     public void Step()
     {
-        Debug.Log($"Step {this.name}");
+        Debug.Log($"Step");
 
         if (this.IsRunning)
         {

@@ -351,7 +351,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 00d26fe451def9e429c4f3eb978d05d6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  cellPrefab: {fileID: 5654518972716906066, guid: 4668e799596666b4b929df1e51f3a024, type: 3}
+  is2D: 1
+  cellPrefab2D: {fileID: 5654518972716906066, guid: 4668e799596666b4b929df1e51f3a024, type: 3}
+  cellPrefab3D: {fileID: 722130853227631090, guid: 6f31ec3220588c144872fd006430ab6b, type: 3}
+  cellCount: 0
+  candidateCount: 0
+  neighborMin2D: 2
+  neighborMax2D: 4
+  neighborSpawn2D: 4
 --- !u!4 &1381589688
 Transform:
   m_ObjectHideFlags: 0

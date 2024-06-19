@@ -44,7 +44,7 @@ public class Observer : MonoBehaviour
             this.hspeed = 0.0f;
             this.vspeed = 0.0f;
 
-            this.transform.position = Vector3.zero;
+            this.transform.position = new Vector3(0.0f, 1.0f, -10.0f);
             this.transform.rotation = Quaternion.identity;
         }
 

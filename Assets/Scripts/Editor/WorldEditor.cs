@@ -17,22 +17,22 @@ public class WorldEditor : Editor
             world.ClearAll();
         }
 
-        if (GUILayout.Button("Spawn 3D"))
+        if (GUILayout.Button("Spawn 20"))
         {
             World world = (World)target;
             world.SpawnRandom(20);
         }
 
-        if (GUILayout.Button("Spawn 2D"))
+        if (GUILayout.Button("Spawn 100"))
         {
             World world = (World)target;
-            world.SpawnRandom2D(20);
+            world.SpawnRandom(100);
         }
 
-        if (GUILayout.Button("Spawn 2D Glider"))
+        if (GUILayout.Button("Spawn Glider"))
         {
             World world = (World)target;
-            world.SpawnGlider2D();
+            world.SpawnGlider();
         }
 
         if (GUILayout.Button(this.runStopText))
@@ -56,6 +56,7 @@ public class WorldEditor : Editor
             World world = (World)target;
 
             world.Step();
+            this.runStopText = "Run";
         }
     }
 }
