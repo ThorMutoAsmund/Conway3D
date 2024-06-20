@@ -356,9 +356,9 @@ MonoBehaviour:
   cellPrefab3D: {fileID: 722130853227631090, guid: 6f31ec3220588c144872fd006430ab6b, type: 3}
   cellCount: 0
   candidateCount: 0
-  neighborMin2D: 5
-  neighborMax2D: 9
-  neighborSpawn2D: 4
+  neighborMin2D: 4
+  neighborMax2D: 6
+  neighborSpawn2D: 5
   neighborSpawnMax2D: 7
 --- !u!4 &1381589688
 Transform:
